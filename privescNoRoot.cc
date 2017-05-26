@@ -401,6 +401,8 @@ void init_dev_mem() {
   // Check that /dev/mem works.
   int *mem = (int *) mmap(NULL, page_size, PROT_READ | PROT_WRITE,
                           MAP_PRIVATE | MAP_ANON | MAP_POPULATE, -1, 0);
+  // mem is a virtual address.
+  // TODO Do we need `got`?
   assert(mem != (int *) MAP_FAILED);
   for (int i = 0; i < 10; i++) {
     *mem = i;
@@ -547,6 +549,8 @@ public:
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *) prog_data;
     uintptr_t load_start = 0x400000; // TODO: Don't assume this.
     virt_addr = prog_data + ehdr->e_entry - load_start;
+
+    //TODO Remove this, and stop checking for the modification.
     phys_addr = get_physical_addr(virt_addr);
     // Check that we only need to modify one page.
     assert(phys_addr / page_size == (phys_addr + template_size()) / page_size);
@@ -645,6 +649,7 @@ void main_prog(int test_mode, const char *addrs_file) {
     if (i == iterations / 2) {
       if (test_mode) {
         g_victim_phys_addr =
+	//Don't need to remove cos we're not using test mode anyway.
           get_physical_addr(fragmenter.next_page_addr()) + flip_offset_bytes;
       } else {
         flipper->retry_to_check();
@@ -694,6 +699,8 @@ void main_prog(int test_mode, const char *addrs_file) {
       for (size_t offset = 0; offset < file_size; offset += large_page) {
         uintptr_t virt_addr = ((uintptr_t) mapped + offset +
                                flip_offset_page * page_size);
+
+	//TODO: Can remove this. required_bit_val is mostly for info only.
         uint64_t phys_addr = get_physical_addr(virt_addr);
         int required_bit_val = ((phys_addr >> flip_bit_number) & 1) ^ 1;
         printf("  Page table %zi requires flip to %i: address is 0x%llx\n",
